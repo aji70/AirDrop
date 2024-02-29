@@ -1,12 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./IERC20.sol";
-// import "./IchainLink.sol";
+interface IERC20 {
+    // function name() external view returns (string memory);
+    // function symbol() external view returns (string memory);
+    // function decimals() external view returns (uint8);
+    // function totalSupply() external view returns (uint256);
+    function balanceOf(address _owner) external view returns (uint256 balance);
+    function transfer(address _to, uint256 _value) external returns (bool success);
+    function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
+    // function approve(address _spender, uint256 _value) external returns (bool success);
+    // function allowance(address _owner, address _spender) external view returns (uint256 remaining);
+
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+}
 interface IAjiVRFv2Consumer {
-   function RandomNumber1() external view  returns(uint);
-    function RandomNumber2() external view  returns(uint);
-    function RandomNumber3() external view  returns(uint);
+   function requestRandomWords() external returns (uint256 requestId);
+   function setNum(uint32 _num) external ;
+   function Winners() external view returns(uint [] memory _winners);   
     
 }
 
@@ -20,9 +32,7 @@ contract AirdropGames{
         uint raffelNumber;
     }
 
-    uint public randomWinner1;
-    uint public randomWinner2;
-    uint public randomWinner3;
+        uint[] public winnigNumber;
 
     uint participantsCount;
     mapping (address => Participant) public participants;
@@ -41,7 +51,7 @@ contract AirdropGames{
     uint rewardCount;
 
     address ajidokwuToken = 0xb9F69472A23fb0C20fB3Cb699eF8746eD43488e1;
-    address chainLink = 0xE29F4b02667D44BD84741dd3c8C342bda1aD0aF9;
+    address chainLink = 0x2f382911995146c5B721b7418f9D338BAB843A9d;
 
     Participant[] public participantsArray;
             address owner = msg.sender;
@@ -136,12 +146,15 @@ contract AirdropGames{
     }
 
 
-    function randomWinners() external  returns(uint, uint, uint){
-
-         randomWinner1 = IAjiVRFv2Consumer(chainLink).RandomNumber1();
-         randomWinner2 = IAjiVRFv2Consumer(chainLink).RandomNumber2();
-         randomWinner3 = IAjiVRFv2Consumer(chainLink).RandomNumber3();
-        return ( randomWinner1, randomWinner2, randomWinner3);
+    function randomWinners() external  returns(uint [] memory){
+        uint[] memory arr = IAjiVRFv2Consumer(chainLink).Winners();
+        for(uint i = 0; i < arr.length; i++){
+           uint a = arr[i];
+           uint b = a % 10;
+            winnigNumber.push(b);
+            }
+                 
+        return (winnigNumber);
      }
 
     function airdropRewardCalculation() external  returns(uint){
@@ -153,57 +166,31 @@ contract AirdropGames{
         return(reward) ;          
     }
 
-    function claimReward() external returns(string memory status){
-        // require(block.timestamp > deadline, "not yet time to claim yet");
-        Participant storage newParticipant = participants[msg.sender];
-        require(gottenRaffelnum[msg.sender], "You do not qualify for reward");
-        
-        if(airDropRaffelNumber[msg.sender] == randomWinner1){
-        
-        require(newParticipant.reward > 0, "Reward Claimed");
+   function claimReward() external returns (string memory status) {
+    Participant storage newParticipant = participants[msg.sender];
+    require(gottenRaffelnum[msg.sender], "You do not qualify for reward");
+    require(newParticipant.reward > 0, "Reward Claimed");
 
+    for (uint i = 0; i < winnigNumber.length; i++) {
+        if (winnigNumber[i] == airDropRaffelNumber[msg.sender]) {
+            uint amount = newParticipant.reward;
+            newParticipant.reward = 0;
 
-        uint amount = newParticipant.reward;
-        newParticipant.reward = 0;
+            // Check if the contract has enough tokens to transfer
+            require(IERC20(ajidokwuToken).balanceOf(address(this)) >= amount, "Contract does not have enough tokens");
 
-        IERC20(ajidokwuToken).transfer(msg.sender, amount);
-        emit rewardClaimed(msg.sender, "claimed", amount, "successfully");
-        return ("CONGRATULATIONS");
+            // Update the participant's reward before transferring to reduce gas costs
+            IERC20(ajidokwuToken).transfer(msg.sender, amount);
+
+            emit rewardClaimed(msg.sender, "claimed", amount, "successfully");
+            return "CONGRATULATIONS";
         }
-        else if(airDropRaffelNumber[msg.sender] == randomWinner2){
-        
-        require(newParticipant.reward > 0, "Reward Claimed");
-
-
-        uint amount = newParticipant.reward;
-        newParticipant.reward = 0;
-
-        IERC20(ajidokwuToken).transfer(msg.sender, amount);
-        emit rewardClaimed(msg.sender, "claimed", amount, "successfully");
-        return ("CONGRATULATIONS");
-        }
-        else if(airDropRaffelNumber[msg.sender] == randomWinner3){
-        
-        require(newParticipant.reward > 0, "Reward Claimed");
-
-
-        uint amount = newParticipant.reward;
-        newParticipant.reward = 0;
-
-        IERC20(ajidokwuToken).transfer(msg.sender, amount);
-
-        emit rewardClaimed(msg.sender, "claimed", amount, "successfully");
-        return ("CONGRATULATIONS");
-
-        }
-
-        else{
-            revert("try again NEXT TIME");
-            
-        }
-
-
     }
+
+    // No winning number matched, participant did not win
+    return("No reward won, try again next time");
+}
+
 
     function timeLeft() external  view returns(uint TimeLeftIs){
         require(deadline > block.timestamp, "TIME UP");
