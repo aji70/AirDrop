@@ -44,7 +44,7 @@ contract AirdropGames{
     mapping (address => uint)  airDropRaffelNumber;
      mapping (address => bool)  gottenRaffelnum;
     mapping (uint => Participant)  airDropRaffelParticipant;
-    uint public deadline = block.timestamp  + 9;
+    uint public deadline = block.timestamp  + 3600;
     
     event rewardClaimed(address, string, uint, string);
 
@@ -58,7 +58,7 @@ contract AirdropGames{
 
 
     function register() external {
-        // require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
+        require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         Participant storage newParticipant = participants[msg.sender];
         require(!hasRegistered[msg.sender], "Registered already");
         uint _id = participantsCount + 1;
@@ -70,7 +70,7 @@ contract AirdropGames{
     }
 
     function guessTheNumber(uint _guess) external  returns(string memory answer)  {
-        // require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
+        require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(hasRegistered[msg.sender], "Only Registered accounts can apply");
         Participant storage newParticipant = participants[msg.sender];
         participantsArray.push(newParticipant);   
@@ -105,7 +105,7 @@ contract AirdropGames{
     }
 
     function followUsOnTwitter() external {
-        // require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
+        require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(hasRegistered[msg.sender], "Only Registered accounts can apply");
         require(!followTwitter[msg.sender], "Already following");
         Participant storage newParticipant = participants[msg.sender];
@@ -115,7 +115,7 @@ contract AirdropGames{
     }
 
        function connectLink() external {
-        // require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
+        require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(hasRegistered[msg.sender], "Only Registered accounts can apply");
         require(!connectlink[msg.sender], "Already following");
         Participant storage newParticipant = participants[msg.sender];
@@ -125,7 +125,7 @@ contract AirdropGames{
     }
 
     function getAirdropRaffelNumber() external returns (uint Raffel_ID) {
-        // require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
+        require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(!gottenRaffelnum[msg.sender], "Already have Raffel Number");
         Participant storage newParticipant = participants[msg.sender];
         if(rewardCount <=10){
@@ -188,7 +188,7 @@ contract AirdropGames{
     }
 
     // No winning number matched, participant did not win
-    return("No reward won, try again next time");
+    revert("No reward won, try again next time");
 }
 
 
