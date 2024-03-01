@@ -45,4 +45,5 @@ AjiVRFv2Consumer contract Address: 0x2f382911995146c5B721b7418f9D338BAB843A9d
 Ajidokwu20 tokens contract Address: 0xb9F69472A23fb0C20fB3Cb699eF8746eD43488e1
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
-author: Sabo Ajidokwu Emmanuel
+
+- author: Sabo Ajidokwu Emmanuel
