@@ -1,14 +1,12 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const AjiVRFv2Consumer = await ethers.deployContract("AjiVRFv2Consumer", [
-    9761,
-  ]);
+  const AirdropGames = await ethers.deployContract("AirdropGames", [9761]);
 
-  await AjiVRFv2Consumer.waitForDeployment();
+  await AirdropGames.waitForDeployment();
 
   console.log(
-    ` AjiVRFv2Consumer contract was deployed to ${AjiVRFv2Consumer.target}`
+    ` AjiVRFv2Consumer contract was deployed to ${AirdropGames.target}`
   );
 }
 

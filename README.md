@@ -38,6 +38,11 @@ Deploy the contract to a compatible Ethereum network.
 * airdrop reward calculation to calculate rewards earned
 * if lucky then claim rewards
 
+Airdrop.sol contract Address: 0x3A6f2f04BdB1457ad7ad1E66155C8224813Da7A3
+
+AjiVRFv2Consumer contract Address: 0x2f382911995146c5B721b7418f9D338BAB843A9d
+
+Ajidokwu20 tokens contract Address: 0xb9F69472A23fb0C20fB3Cb699eF8746eD43488e1
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
 author: Sabo Ajidokwu Emmanuel
