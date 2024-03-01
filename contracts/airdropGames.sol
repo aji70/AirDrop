@@ -50,42 +50,57 @@ contract AirdropGames{
 
     uint rewardCount;
 
-    address ajidokwuToken = 0xb9F69472A23fb0C20fB3Cb699eF8746eD43488e1;
-    address chainLink = 0x2f382911995146c5B721b7418f9D338BAB843A9d;
+    address ajidokwuToken = 0xb9F69472A23fb0C20fB3Cb699eF8746eD43488e1;//Address for ERC20 token to be given as reward
+    address chainLink = 0x2f382911995146c5B721b7418f9D338BAB843A9d; //Address of chainlink contract that would generate random Numbers
 
     Participant[] public participantsArray;
-            address owner = msg.sender;
+    address owner = msg.sender;
+
+    
 
 
     function register() external {
         require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
+
         Participant storage newParticipant = participants[msg.sender];
+
         require(!hasRegistered[msg.sender], "Registered already");
+
         uint _id = participantsCount + 1;
+
         newParticipant.id = _id;
+
         newParticipant.points = 0;
+
         hasRegistered[msg.sender] = true;
-        guessGameScore[msg.sender] = 5;
+
+        guessGameScore[msg.sender] = 5;  //setting user score in the game to be 5 and would be reduced for every turn he fails till he wins or lose
 
     }
 
     function guessTheNumber(uint _guess) external  returns(string memory answer)  {
         require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
-        require(hasRegistered[msg.sender], "Only Registered accounts can apply");
+        require(hasRegistered[msg.sender], "Only Registered accounts can play");
+
         Participant storage newParticipant = participants[msg.sender];
+
         participantsArray.push(newParticipant);   
         participantsCount++;
         require(!guessGame[msg.sender], "You have played already");
         
         
         string memory lost = "You Have Lost The game";
-        uint number = 2;
+        uint number = 2;  // Answer to the game
+
+        // if user score is zero he fails the game but gets 100 points for trying
         if ( guessGameScore[msg.sender] < 1){
             guessGame[msg.sender] = true;
             newParticipant.gamesParticipatedCount +=1;
             newParticipant.points += 100;
             return (lost);
         }
+
+        // if user wins he gets 300points multiply by the amount of turns he needed to win
         else if(_guess == number){
             guessGame[msg.sender] = true;
             newParticipant.gamesParticipatedCount +=1;
@@ -108,16 +123,19 @@ contract AirdropGames{
         require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(hasRegistered[msg.sender], "Only Registered accounts can apply");
         require(!followTwitter[msg.sender], "Already following");
+        // 100points for a follow on twitter
         Participant storage newParticipant = participants[msg.sender];
         newParticipant.gamesParticipatedCount +=1;
         followTwitter[msg.sender] =true;
         newParticipant.points += 100;
     }
 
-       function connectLink() external {
+       function connectLinkdin() external {
         require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(hasRegistered[msg.sender], "Only Registered accounts can apply");
         require(!connectlink[msg.sender], "Already following");
+
+        // 200 points for following on linkdin
         Participant storage newParticipant = participants[msg.sender];
         newParticipant.gamesParticipatedCount +=1;
         connectlink[msg.sender] =true;
@@ -127,13 +145,19 @@ contract AirdropGames{
     function getAirdropRaffelNumber() external returns (uint Raffel_ID) {
         require(deadline > block.timestamp, "TIME UP CAN NO LONGER GET REWARDS");
         require(!gottenRaffelnum[msg.sender], "Already have Raffel Number");
+
+
         Participant storage newParticipant = participants[msg.sender];
+        // rewards starts after 10 people participates in the activites
         if(rewardCount <=10){
+         // User needs to be involved in 2 activites to be eligible   
             require(newParticipant.gamesParticipatedCount >= 2, "Not yet Eligible");
             rewardCount++;
+            //set users raffel number 
             airDropRaffelNumber[msg.sender] = rewardCount;
             newParticipant.raffelNumber = rewardCount;
             gottenRaffelnum[msg.sender] = true;
+
             airDropRaffelParticipant[rewardCount] = newParticipant;
             return (rewardCount);
 
@@ -145,7 +169,7 @@ contract AirdropGames{
         return(newParticipant.points);
     }
 
-
+    //function uses interface to get random number from chainlink
     function randomWinners() external  returns(uint [] memory){
         uint[] memory arr = IAjiVRFv2Consumer(chainLink).Winners();
         for(uint i = 0; i < arr.length; i++){
@@ -153,24 +177,32 @@ contract AirdropGames{
            uint b = a % 10;
             winnigNumber.push(b);
             }
-                 
+        //winning number is an array that will hold all the random numbers returned
         return (winnigNumber);
      }
 
+
+    // Calculating the airdrop by multiplying users points by 100000
     function airdropRewardCalculation() external  returns(uint){
         Participant storage newParticipant = participants[msg.sender];
         require(gottenRaffelnum[msg.sender], "You do not qualify for reward");
+
         uint reward = newParticipant.points * 100000;
         newParticipant.points = 0;
         newParticipant.reward += reward;
         return(reward) ;          
     }
 
+
+    //Users claim their rewards
    function claimReward() external returns (string memory status) {
+
     Participant storage newParticipant = participants[msg.sender];
+
     require(gottenRaffelnum[msg.sender], "You do not qualify for reward");
     require(newParticipant.reward > 0, "Reward Claimed");
 
+    // Checks if users raffel number is in the luck winners array if it is user is rewarded else try again
     for (uint i = 0; i < winnigNumber.length; i++) {
         if (winnigNumber[i] == airDropRaffelNumber[msg.sender]) {
             uint amount = newParticipant.reward;
@@ -196,5 +228,11 @@ contract AirdropGames{
         require(deadline > block.timestamp, "TIME UP");
         uint tL = deadline - block.timestamp;
         return tL;
+    }
+
+    function generateRandomNumbers(uint32 _numword) external {
+   // user specifies how many random numbers he want and calls the function to generate the numbers from the chainlink contract
+        IAjiVRFv2Consumer(chainLink).setNum(_numword);
+        IAjiVRFv2Consumer(chainLink).requestRandomWords();
     }
 }
